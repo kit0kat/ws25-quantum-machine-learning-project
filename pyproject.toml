@@ -1,0 +1,15 @@
+[project]
+name = "ws25-quantum-machine-learning-project"
+version = "0.1.0"
+description = "WS25 QML Project @HHN"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "dill>=0.4.0",
+    "matplotlib>=3.10.8",
+    "numpy>=2.2.6",
+    "pandas>=2.3.3",
+    "qiskit>=1.4.5",
+    "scikit-learn>=1.7.2",
+    "squlearn==0.10.0",
+]
