@@ -1,8 +1,12 @@
 import numpy as np
+from matplotlib import pyplot as plt
+from matplotlib.cm import ScalarMappable
+from matplotlib.colors import BoundaryNorm
 from qiskit import QuantumCircuit, ClassicalRegister, transpile
 from qiskit.circuit import ParameterVector
 from qiskit.providers import Backend
-from qiskit.quantum_info import PauliList
+from qiskit.quantum_info import PauliList, Statevector, partial_trace
+from qiskit.visualization.bloch import Bloch
 from squlearn.encoding_circuit.encoding_circuit_base import EncodingCircuitBase
 from squlearn.observables.observable_base import ObservableBase
 
@@ -75,3 +79,42 @@ def get_measurement_circuits(
             for measurement_circuit in measurement_circuits
         ]
     return measurement_circuits
+
+
+def plot_encoded_quantum_data(
+        encoding_circuit: EncodingCircuitBase,
+        X: np.ndarray,
+        y: np.ndarray,
+) -> None:
+    quantum_states = [
+        Statevector.from_instruction(encoding_circuit.get_circuit(example, None))
+        for example in X
+    ]
+    num_qubits = encoding_circuit.num_qubits
+    num_classes = len(np.unique(y))
+    fig, ax = plt.subplots(
+        nrows=1,
+        ncols=num_qubits,
+        figsize=(5 * num_qubits, 8),
+        subplot_kw={"projection": "3d"},
+    )
+    cmap = plt.get_cmap("tab10")
+    norm = BoundaryNorm(np.arange(-0.5, num_classes, 1), cmap.N)
+    for qubit in range(num_qubits):
+        bloch = Bloch(fig=fig, axes=ax[qubit])
+        for state_idx, state in enumerate(quantum_states):
+            trace_indices = [i for i in range(num_qubits) if i != qubit]
+            rho = partial_trace(state, trace_indices)
+            c_x = float((rho.data[0, 1] + rho.data[1, 0]).real)
+            c_y = float((rho.data[1, 0] - rho.data[0, 1]).imag)
+            c_z = float((rho.data[0, 0] - rho.data[1, 1]).real)
+            bloch.add_vectors([c_x, c_y, c_z])
+        bloch.vector_color = [cmap(norm(label)) for label in y]
+        bloch.render()
+        ax[qubit].set_title(f"$q_{qubit}$", fontsize=18, pad=48)
+    fig.colorbar(
+        mappable=ScalarMappable(cmap=cmap, norm=norm),
+        ax=ax,
+        ticks=np.arange(num_classes),
+        shrink=0.5,
+    )
