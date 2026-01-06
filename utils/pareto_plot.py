@@ -24,8 +24,9 @@ def pareto_plot(data: pd.DataFrame, x: str, y: str, label: Callable[[pd.Series],
         title=title,
         legend=True,
         label="Pareto Front",
+        color="red",
     )
     data[~data["pareto_front"]].plot(kind="scatter", x=x, xlabel=x, y=y, ylabel=y, grid=True, alpha=0.25, s=30, ax=ax)
-    data[data["pareto_front"]].plot(kind="scatter", x=x, xlabel=x, y=y, ylabel=y, grid=True, alpha=1.0, ax=ax)
+    data[data["pareto_front"]].plot(kind="scatter", x=x, xlabel=x, y=y, ylabel=y, grid=True, color="red", s=50, marker="x", ax=ax)
     texts = [ax.text(x=row[x], y=row[y], s=label(row), fontsize=10) for _, row in data[data["pareto_front"]].iterrows()]
     adjust_text(texts, arrowprops={"arrowstyle": "->", "alpha": 0.25})
